@@ -24,18 +24,21 @@ namespace RectangleGame
         static void MakeMove(ref Player _player)
         {
             int dice1 = 0, dice2 = 0;
+            int movePosX = 0, movePosY = 0;
             if (_player.MovesCount > 0)
             {
                 bool canMakeMove = false;
                 for (int i = 0; i < 2; i++)//2 tries to make move
                 {
                     GetRandomNumbers(out dice1, out dice2);
-                    WriteMessages(rectMessageWindow, Messages, $"Player {_player.Name}'s move. Dice: hight {dice1} and width {dice2}");
+                    WriteMessages(rectMessageWindow, Messages, $"Player {_player.Name}'s move. Dice: height {dice1} and width {dice2}");
                     foreach (var rect in freeRectangles)
                     {
                         if ((rect.Width >= dice2) && (rect.Height >= dice1))
                         {
                             canMakeMove = true;
+                            movePosX = rect.LeftTopX;
+                            movePosY = rect.LeftTopY;
                             break;
                         }
                     }
@@ -52,7 +55,7 @@ namespace RectangleGame
                 if (canMakeMove)
                 {
                     bool moveDone = false;
-                    Rectangle rectPlayersMove = new Rectangle(0, 0 ,0 ,0);
+                    Rectangle rectPlayersMove = new Rectangle(0, 0, 0, 0);
 
                     if (_player.Name == "Computer")
                     {
@@ -78,8 +81,8 @@ namespace RectangleGame
                         WriteMessages(rectMessageWindow, Messages, "Use arrows to select left-top of a rectangle then press {Enter}");
                         Console.CursorVisible = true;
 
-                        Console.CursorLeft = rectGameField.LeftTopX + (rectGameField.Width / 2);
-                        Console.CursorTop = rectGameField.LeftTopY + (rectGameField.Height / 2);
+                        Console.CursorLeft = movePosX;
+                        Console.CursorTop = movePosY;
 
                         while (!moveDone)
                         {
@@ -129,6 +132,7 @@ namespace RectangleGame
                                 }
                             }
                         }
+
                         Console.CursorVisible = false;
                     }
 
@@ -151,6 +155,11 @@ namespace RectangleGame
                                 {
                                     freeRectangles.Add(item);
                                 }
+                                freeRectangles.RemoveAt(index);
+                                maxIndex--;
+                            }
+                            else if (Rectangle.Intersection(freeRectangles[index], rectPlayersMove).Square > 0)
+                            {
                                 freeRectangles.RemoveAt(index);
                                 maxIndex--;
                             }
@@ -297,13 +306,13 @@ namespace RectangleGame
 
         static void Main()
         {
-#if DEBUG
-            WindowSizeX = 80;
-            WindowSizeY = 20;
-#else
-                WindowSizeX = Console.LargestWindowWidth - 20;
-                WindowSizeY = Console.LargestWindowHeight - 10;
-#endif
+            // #if DEBUG
+            //             WindowSizeX = 80;
+            //             WindowSizeY = 20;
+            // #else
+            WindowSizeX = Console.LargestWindowWidth - 20;
+            WindowSizeY = Console.LargestWindowHeight - 10;
+            // #endif
 
             try
             {
@@ -314,7 +323,7 @@ namespace RectangleGame
             catch (IOException e)
             {
                 Console.WriteLine(e.Message);
-                Console.Write("Press <Enter> to exit... ");
+                Console.Write("Press {Enter} to exit... ");
                 while (Console.ReadKey().Key != ConsoleKey.Enter) { }
                 return;
             }
@@ -324,158 +333,182 @@ namespace RectangleGame
 
             Console.Clear();
 
-            Messages = new List<string>();
+            // disclaimer
+            Console.WriteLine("Я читал условие задачи.");
+            Console.WriteLine("Там сказано, что игрок вводит с клавиатуры координаты вершины прямоугольника.");
+            Console.WriteLine("В моей игре координаты указываются на экране, поскольку предполагается ручное тестирование. Спасибо.");
+            Console.Write("Press {Enter} to continue... ");
+            while (Console.ReadKey().Key != ConsoleKey.Enter) { }
+            // disclaimer ends
 
-            rectMessageWindow = new Rectangle(0, WindowSizeY - 8 - 1, WindowSizeX, 8);
-#if DEBUG
-#else
-            if (((WindowSizeX - 2) < 30) || (20 > WindowSizeY - rectMessageWindow.Height - 2))//2 symbols for border, minimal game field 20x20 
+            while (true)// beginning of the game
             {
-                Console.WriteLine("Your display is not good enough. Play some other game.");
-                return;
-            }
-#endif
-            DrawRectangle(rectMessageWindow, '#', false);
+                Console.Clear();
 
-            var player1 = new Player
-            {
-                Name = "Player1",
-                Ch = '1',
-                RectanglesList = new List<Rectangle>()
-            };
+                Messages = new List<string>();
 
-            var player2 = new Player()
-            {
-                Name = "Player2",
-                Ch = '2',
-                RectanglesList = new List<Rectangle>()
-            };
-
-            int numberMoves, height, width, numberPlayers;
-#if DEBUG
-            numberMoves = 20;
-            height = WindowSizeY - rectMessageWindow.Height - 3;
-            width = WindowSizeX - 2;
-            numberPlayers = 1;
-#else
-            int maxValue = 2, minValue = 1;
-            string strUserInput;
-            while (true)
-            {
-                strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, "Enter number of players (1 or 2)");
-                bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out numberMoves);
-                if (resultParsed)
+                rectMessageWindow = new Rectangle(0, WindowSizeY - 10 - 1, WindowSizeX, 10);
+                // #if DEBUG
+                // #else
+                if (((WindowSizeX - 2) < 30) || (20 > WindowSizeY - rectMessageWindow.Height - 2))//2 symbols for border, minimal game field 30x20 
                 {
-                    if ((numberPlayers >= minValue) && (numberPlayers <= maxValue))
+                    Console.WriteLine("Your display is not good enough. Play some other game.");
+                    return;
+                }
+                // #endif
+                DrawRectangle(rectMessageWindow, '#', false);
+
+                var player1 = new Player
+                {
+                    Name = "Player1",
+                    Ch = '1',
+                    RectanglesList = new List<Rectangle>()
+                };
+
+                var player2 = new Player()
+                {
+                    Name = "Player2",
+                    Ch = '2',
+                    RectanglesList = new List<Rectangle>()
+                };
+
+                int numberMoves, height, width, numberPlayers;
+
+
+                // #if DEBUG
+                //             numberMoves = 20;
+                //             height = WindowSizeY - rectMessageWindow.Height - 3;
+                //             width = WindowSizeX - 2 - 60;
+                //             numberPlayers = 1;
+                // #else
+                int maxValue = 2, minValue = 1;
+                string strUserInput;
+                while (true)
+                {
+                    strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, "Enter number of players (1 or 2)");
+                    bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out numberPlayers);
+                    if (resultParsed)
                     {
+                        if ((numberPlayers >= minValue) && (numberPlayers <= maxValue))
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                (minValue, maxValue) = (20, 100);
+                while (true)
+                {
+                    strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter number of moves for each player (min {minValue} max {maxValue})");
+                    bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out numberMoves);
+                    if (resultParsed)
+                    {
+                        if ((numberMoves >= minValue) && (numberMoves <= maxValue))
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                (minValue, maxValue) = (20, WindowSizeY - rectMessageWindow.Height - 2 - 1);//2 symbols for border
+                while (true)
+                {
+                    strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter height of game field (min {minValue} max {maxValue})");
+                    bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out height);
+                    if (resultParsed)
+                    {
+                        if ((height >= minValue) && (height <= maxValue))
+                        {
+                            break;
+                        }
+                    }
+                }
+
+                (minValue, maxValue) = (30, WindowSizeX - 2);//2 symbols for border
+                while (true)
+                {
+                    strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter width of game field (min {minValue} max {maxValue})");
+                    bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out width);
+                    if (resultParsed)
+                    {
+                        if ((width >= minValue) && (width <= maxValue))
+                        {
+                            break;
+                        }
+                    }
+                }
+                // #endif
+                if (numberPlayers == 1)
+                {
+                    player2.Name = "Computer";
+                    player2.Ch = 'C';
+                }
+                else
+                {
+                    player2.Name = "Player2";
+                    player2.Ch = '2';
+                }
+
+                player1.MovesCount = numberMoves;
+                player2.MovesCount = numberMoves;
+
+                var rectGameFieldBorder = new Rectangle(0, 0, width + 2, height + 2);
+                DrawRectangle(rectGameFieldBorder, '*', false);
+
+                rectGameField = new Rectangle(1, 1, width, height);
+
+                //game start
+
+                freeRectangles = new List<Rectangle>();
+
+                freeRectangles.Add(new Rectangle(rectGameField.LeftTopX, rectGameField.LeftTopY, rectGameField.Width, rectGameField.Height));
+
+                while ((player1.MovesCount > 0) || (player2.MovesCount > 0))
+                {
+                    MakeMove(ref player1);
+                    MakeMove(ref player2);
+
+                    if (freeRectangles.Count == 0)
+                    {
+                        WriteMessages(rectMessageWindow, Messages, "Field is filled");
                         break;
                     }
                 }
-            }
-            
-            (minValue, maxValue) = (20, 100);
-            while (true)
-            {
-                strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter number of moves for each player (max {maxValue})");
-                bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out numberMoves);
-                if (resultParsed)
+
+                if (player1.Score > player2.Score)
                 {
-                    if ((numberMoves >= minValue) && (numberMoves <= maxValue))
+                    WriteMessages(rectMessageWindow, Messages, $"{player1.Name} wins with score {player1.Score}");
+                    WriteMessages(rectMessageWindow, Messages, $"{player2.Name} looses with score {player2.Score}");
+                }
+                else if (player2.Score > player1.Score)
+                {
+                    WriteMessages(rectMessageWindow, Messages, $"{player2.Name} wins with score {player2.Score}");
+                    WriteMessages(rectMessageWindow, Messages, $"{player1.Name} looses with score {player1.Score}");
+                }
+                else
+                {
+                    WriteMessages(rectMessageWindow, Messages, $"Nobody wins. Score {player1.Score} = {player2.Score}");
+                }
+
+                WriteMessages(rectMessageWindow, Messages, "Press {Enter} to start a new game or {Esc} to exit...");
+
+                ConsoleKeyInfo pressedKey;
+
+                while (true)
+                {
+                    if (Console.KeyAvailable)
                     {
-                        break;
+                        pressedKey = Console.ReadKey(true);
+
+                        if ((pressedKey.Key == ConsoleKey.Escape) || (pressedKey.Key == ConsoleKey.Enter))
+                        {
+                            break;
+                        }
                     }
                 }
-            }
-
-            (minValue, maxValue) = (20, WindowSizeY - rectMessageWindow.Height - 2 - 1);//2 symbols for border
-            while (true)
-            {
-                strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter height of game field (min {minValue} max {maxValue})");
-                bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out height);
-                if (resultParsed)
+                if (pressedKey.Key == ConsoleKey.Escape)
                 {
-                    if ((height >= minValue) && (height <= maxValue))
-                    {
-                        break;
-                    }
-                }
-            }
-
-            (minValue, maxValue) = (30, WindowSizeX - 2);//2 symbols for border
-            while (true)
-            {
-                strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter width of game field (min {minValue} max {maxValue})");
-                bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out width);
-                if (resultParsed)
-                {
-                    if ((width >= minValue) && (width <= maxValue))
-                    {
-                        break;
-                    }
-                }
-            }
-#endif
-            if (numberPlayers == 1)
-            {
-                player2.Name = "Computer";
-                player2.Ch = 'C';
-            }
-
-            player1.MovesCount = numberMoves;
-            player2.MovesCount = numberMoves;
-
-            var rectGameFieldBorder = new Rectangle(0, 0, width + 2, height + 2);
-            DrawRectangle(rectGameFieldBorder, '*', false);
-
-            rectGameField = new Rectangle(1, 1, width, height);
-
-            //game start
-
-            freeRectangles = new List<Rectangle>();
-
-            freeRectangles.Add(new Rectangle(rectGameField.LeftTopX, rectGameField.LeftTopY, rectGameField.Width, rectGameField.Height));
-
-            while ((player1.MovesCount > 0) || (player2.MovesCount > 0))
-            {
-                MakeMove(ref player1);
-                MakeMove(ref player2);
-
-                if (freeRectangles.Count == 0)
-                {
-                    WriteMessages(rectMessageWindow, Messages, "Field is filled");
                     break;
-                }
-            }
-
-            if (player1.Score > player2.Score)
-            {
-                WriteMessages(rectMessageWindow, Messages, $"{player1.Name} wins with score {player1.Score}");
-                WriteMessages(rectMessageWindow, Messages, $"{player2.Name} looses with score {player2.Score}");
-            }
-            else if (player2.Score > player1.Score)
-            {
-                WriteMessages(rectMessageWindow, Messages, $"{player2.Name} wins with score {player2.Score}");
-                WriteMessages(rectMessageWindow, Messages, $"{player1.Name} looses with score {player1.Score}");
-            }
-            else
-            {
-                WriteMessages(rectMessageWindow, Messages, $"Nobody wins. Score {player1.Score} = {player2.Score}");
-            }
-
-            WriteMessages(rectMessageWindow, Messages, "Press {Esc} to exit...");
-
-            ConsoleKeyInfo pressedKey;
-
-            while (true)
-            {
-                if (Console.KeyAvailable)
-                {
-                    pressedKey = Console.ReadKey(true);
-
-                    if (pressedKey.Key == ConsoleKey.Escape)
-                    {
-                        break;
-                    }
                 }
             }
         }

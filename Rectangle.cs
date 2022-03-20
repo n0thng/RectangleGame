@@ -56,7 +56,7 @@ namespace RectangleGame
 
             var rectIntersection = Rectangle.Intersection(this, rect);
 
-            if (rectIntersection.Square == 0)// nothing to do
+            if ((rectIntersection.Square == 0) || (rectIntersection == this))// nothing to do
             {
                 return listRectResult;
             }
