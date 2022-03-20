@@ -68,7 +68,7 @@ namespace RectangleGame
 
             if (rectIntersection.LeftTopX + rectIntersection.Width < LeftTopX + Width)// slice from the right
             {
-                listRectResult.Add(new Rectangle(rectIntersection.LeftTopX + rectIntersection.Width, LeftTopY, Width - rectIntersection.Width - 1, Height));
+                listRectResult.Add(new Rectangle(rectIntersection.LeftTopX + rectIntersection.Width, LeftTopY, LeftTopX + Width - rectIntersection.LeftTopX - rectIntersection.Width, Height));
             }
 
             if (rectIntersection.LeftTopY > LeftTopY)// upper slice
@@ -78,7 +78,7 @@ namespace RectangleGame
 
             if (rectIntersection.LeftTopY + rectIntersection.Height < LeftTopY + Height)// lower slice
             {
-                listRectResult.Add(new Rectangle(LeftTopX, rectIntersection.LeftTopY + rectIntersection.Height, Width, Height - rectIntersection.Height - 1));
+                listRectResult.Add(new Rectangle(LeftTopX, rectIntersection.LeftTopY + rectIntersection.Height, Width, LeftTopY + Height - rectIntersection.LeftTopY - rectIntersection.Height));
             }
 
             return listRectResult;

@@ -64,10 +64,16 @@ artifacts/
 # StyleCop
 StyleCopReport.xml
 
+# my files
+bin/
+obj/
+
 # Files built by Visual Studio
 *_i.c
 *_p.c
 *_h.h
+*.cache
+*.dll
 *.ilk
 *.meta
 *.obj
@@ -346,5 +352,3 @@ healthchecksdb
 # Backup folder for Package Reference Convert tool in Visual Studio 2017
 MigrationBackup/
 
-# Ionide (cross platform F# VS Code tools) working folder
-.ionide/

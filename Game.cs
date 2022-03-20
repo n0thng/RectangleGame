@@ -7,6 +7,7 @@ namespace RectangleGame
 {
     /// <summary>
     /// simple console game
+    /// you can play with your friend or computer
     /// </summary>
     static class Game
     {
@@ -16,11 +17,9 @@ namespace RectangleGame
         static Rectangle rectMessageWindow;//rectangle represents message window
         static List<string> Messages;//strings of message window
         static Rectangle rectGameField;//rectangle represents game field
-        //static List<Rectangle> player1Rectangles;//list of player1's rectangles
-        //static List<Rectangle> player2Rectangles;//list of player2's rectangles
         static List<Rectangle> freeRectangles;//list of neutral rectangles of max square that may intersect
         /// <summary>
-        /// move of player <param name="numPlayer"></param>
+        /// move of player <param name="_player"></param>
         /// </summary>
         static void MakeMove(ref Player _player)
         {
@@ -52,92 +51,120 @@ namespace RectangleGame
 
                 if (canMakeMove)
                 {
-                    WriteMessages(rectMessageWindow, Messages, "Use arrows to select left-top of a rectangle then press {Enter}");
-                    Console.CursorVisible = true;
                     bool moveDone = false;
+                    Rectangle rectPlayersMove = new Rectangle(0, 0 ,0 ,0);
 
-                    Console.CursorLeft = rectGameField.LeftTopX + (rectGameField.Width / 2);
-                    Console.CursorTop = rectGameField.LeftTopY + (rectGameField.Height / 2);
-
-                    while (!moveDone)
+                    if (_player.Name == "Computer")
                     {
-                        if (Console.KeyAvailable)
+                        int maxDelta = 0, maxSquare = 0, x = 0, y = 0, delta;
+
+                        foreach (var item in freeRectangles)
                         {
-                            ConsoleKeyInfo pressedKey = Console.ReadKey(true);
-
-                            switch (pressedKey.Key)
+                            delta = Math.Min(item.Width - dice2, item.Height - dice1);
+                            if ((delta > maxDelta) || ((delta == maxDelta) && (item.Square > maxSquare)))
                             {
-                                case ConsoleKey.UpArrow:
-                                    if (Console.CursorTop > rectGameField.LeftTopY)
-                                    {
-                                        Console.CursorTop--;
-                                    }
-                                    break;
-                                case ConsoleKey.DownArrow:
-                                    if (Console.CursorTop < rectGameField.LeftTopY + rectGameField.Height - 1)
-                                    {
-                                        Console.CursorTop++;
-                                    }
-                                    break;
-                                case ConsoleKey.LeftArrow:
-                                    if (Console.CursorLeft > rectGameField.LeftTopX)
-                                    {
-                                        Console.CursorLeft--;
-                                    }
-                                    break;
-                                case ConsoleKey.RightArrow:
-                                    if (Console.CursorLeft < rectGameField.LeftTopX + rectGameField.Width - 1)
-                                    {
-                                        Console.CursorLeft++;
-                                    }
-                                    break;
-                                case ConsoleKey.Enter:
-                                    var rectPlayersMove = new Rectangle(Console.CursorLeft, Console.CursorTop, dice2, dice1);
-                                    foreach (var rectFree in freeRectangles)
-                                    {
-                                        if (Rectangle.Intersection(rectPlayersMove, rectFree) == rectPlayersMove)
-                                        {
-                                            DrawRectangle(rectPlayersMove, _player.Ch, true);
-                                            _player.RectanglesList.Add(rectPlayersMove);
-                                            _player.Score += rectPlayersMove.Square;
-                                            moveDone = true;
-                                            break;
-                                        }
-                                    }
+                                x = item.LeftTopX + ((item.Width - dice2) / 2);
+                                y = item.LeftTopY + ((item.Height - dice1) / 2);
+                                maxDelta = delta;
+                                maxSquare = item.Square;
+                            }
+                        }
 
-                                    if (moveDone)
-                                    {
-                                        var maxIndex = freeRectangles.Count - 1;
-                                        int index = 0;
-                                        while (index <= maxIndex)
+                        rectPlayersMove = new Rectangle(x, y, dice2, dice1);
+                        moveDone = true;
+                    }
+                    else
+                    {
+                        WriteMessages(rectMessageWindow, Messages, "Use arrows to select left-top of a rectangle then press {Enter}");
+                        Console.CursorVisible = true;
+
+                        Console.CursorLeft = rectGameField.LeftTopX + (rectGameField.Width / 2);
+                        Console.CursorTop = rectGameField.LeftTopY + (rectGameField.Height / 2);
+
+                        while (!moveDone)
+                        {
+                            if (Console.KeyAvailable)
+                            {
+                                ConsoleKeyInfo pressedKey = Console.ReadKey(true);
+
+                                switch (pressedKey.Key)
+                                {
+                                    case ConsoleKey.UpArrow:
+                                        if (Console.CursorTop > rectGameField.LeftTopY)
                                         {
-                                            var newList = freeRectangles[index].SliceWith(rectPlayersMove);
-                                            if (newList.Count > 0)
+                                            Console.CursorTop--;
+                                        }
+                                        break;
+                                    case ConsoleKey.DownArrow:
+                                        if (Console.CursorTop < rectGameField.LeftTopY + rectGameField.Height - 1)
+                                        {
+                                            Console.CursorTop++;
+                                        }
+                                        break;
+                                    case ConsoleKey.LeftArrow:
+                                        if (Console.CursorLeft > rectGameField.LeftTopX)
+                                        {
+                                            Console.CursorLeft--;
+                                        }
+                                        break;
+                                    case ConsoleKey.RightArrow:
+                                        if (Console.CursorLeft < rectGameField.LeftTopX + rectGameField.Width - 1)
+                                        {
+                                            Console.CursorLeft++;
+                                        }
+                                        break;
+                                    case ConsoleKey.Enter:
+                                        rectPlayersMove = new Rectangle(Console.CursorLeft, Console.CursorTop, dice2, dice1);
+                                        foreach (var rectFree in freeRectangles)
+                                        {
+                                            if (Rectangle.Intersection(rectPlayersMove, rectFree) == rectPlayersMove)
                                             {
-                                                foreach (var item in newList)
-                                                {
-                                                    freeRectangles.Add(item);
-                                                }
-                                                freeRectangles.RemoveAt(index);
-                                                maxIndex--;
-                                            }
-                                            else
-                                            {
-                                                index++;
+                                                moveDone = true;
+                                                break;
                                             }
                                         }
-                                    }
-                                    break;
-                                default:
-                                    break;
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            }
+                        }
+                        Console.CursorVisible = false;
+                    }
+
+                    if (moveDone)
+                    {
+                        DrawRectangle(rectPlayersMove, _player.Ch, true);
+                        _player.RectanglesList.Add(rectPlayersMove);
+                        _player.Score += rectPlayersMove.Square;
+
+                        WriteMessages(rectMessageWindow, Messages, $"{_player.Name} put rectangle at ({rectPlayersMove.LeftTopX - rectGameField.LeftTopX}, {rectPlayersMove.LeftTopY - rectGameField.LeftTopY})");
+
+                        var maxIndex = freeRectangles.Count - 1;
+                        int index = 0;
+                        while (index <= maxIndex)
+                        {
+                            var newList = freeRectangles[index].SliceWith(rectPlayersMove);
+                            if (newList.Count > 0)
+                            {
+                                foreach (var item in newList)
+                                {
+                                    freeRectangles.Add(item);
+                                }
+                                freeRectangles.RemoveAt(index);
+                                maxIndex--;
+                            }
+                            else
+                            {
+                                index++;
                             }
                         }
                     }
-                    Console.CursorVisible = false;
                 }
                 else
                 {
-                    WriteMessages(rectMessageWindow, Messages, "Player passed");
+                    WriteMessages(rectMessageWindow, Messages, $"{_player.Name} passed. Press {{Enter}} to continue.");
+                    while (Console.ReadKey().Key != ConsoleKey.Enter) { }
                 }
 
                 _player.MovesCount--;
@@ -151,8 +178,8 @@ namespace RectangleGame
         static void GetRandomNumbers(out int x, out int y)
         {
             var rand = new Random();
-            x = rand.Next(1, 6);
-            y = rand.Next(1, 6);
+            x = rand.Next(1, 7);
+            y = rand.Next(1, 7);
         }
         /// <summary>
         /// updates and rewrites message window <param name="rectMessageWindow"></param>
@@ -278,11 +305,6 @@ namespace RectangleGame
                 WindowSizeY = Console.LargestWindowHeight - 10;
 #endif
 
-            //Console.WriteLine("LargestWindowWidth = " + Console.LargestWindowWidth);240
-            //Console.WriteLine("LargestWindowHeight = " + Console.LargestWindowHeight);73
-
-            //while (Console.ReadKey().Key != ConsoleKey.Enter) {}
-
             try
             {
                 Console.SetWindowSize(WindowSizeX, WindowSizeY);
@@ -302,20 +324,6 @@ namespace RectangleGame
 
             Console.Clear();
 
-            var player1 = new Player
-            {
-                Name = "Player1",
-                Ch = '1',
-                RectanglesList = new List<Rectangle>()
-            };
-
-            var player2 = new Player()
-            {
-                Name = "Player2",// TODO "Computer"
-                Ch = '2',
-                RectanglesList = new List<Rectangle>()
-            };
-
             Messages = new List<string>();
 
             rectMessageWindow = new Rectangle(0, WindowSizeY - 8 - 1, WindowSizeX, 8);
@@ -329,14 +337,43 @@ namespace RectangleGame
 #endif
             DrawRectangle(rectMessageWindow, '#', false);
 
-            int numberMoves, height, width;
+            var player1 = new Player
+            {
+                Name = "Player1",
+                Ch = '1',
+                RectanglesList = new List<Rectangle>()
+            };
+
+            var player2 = new Player()
+            {
+                Name = "Player2",
+                Ch = '2',
+                RectanglesList = new List<Rectangle>()
+            };
+
+            int numberMoves, height, width, numberPlayers;
 #if DEBUG
-            numberMoves = 2;
+            numberMoves = 20;
             height = WindowSizeY - rectMessageWindow.Height - 3;
             width = WindowSizeX - 2;
+            numberPlayers = 1;
 #else
-            int maxValue = 100, minValue = 1;
+            int maxValue = 2, minValue = 1;
             string strUserInput;
+            while (true)
+            {
+                strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, "Enter number of players (1 or 2)");
+                bool resultParsed = int.TryParse(strUserInput, NumberStyles.None, null as IFormatProvider, out numberMoves);
+                if (resultParsed)
+                {
+                    if ((numberPlayers >= minValue) && (numberPlayers <= maxValue))
+                    {
+                        break;
+                    }
+                }
+            }
+            
+            (minValue, maxValue) = (20, 100);
             while (true)
             {
                 strUserInput = ReadLineFromMessageWindow(rectMessageWindow, Messages, $"Enter number of moves for each player (max {maxValue})");
@@ -378,6 +415,12 @@ namespace RectangleGame
                 }
             }
 #endif
+            if (numberPlayers == 1)
+            {
+                player2.Name = "Computer";
+                player2.Ch = 'C';
+            }
+
             player1.MovesCount = numberMoves;
             player2.MovesCount = numberMoves;
 
@@ -396,6 +439,12 @@ namespace RectangleGame
             {
                 MakeMove(ref player1);
                 MakeMove(ref player2);
+
+                if (freeRectangles.Count == 0)
+                {
+                    WriteMessages(rectMessageWindow, Messages, "Field is filled");
+                    break;
+                }
             }
 
             if (player1.Score > player2.Score)
@@ -410,7 +459,7 @@ namespace RectangleGame
             }
             else
             {
-                WriteMessages(rectMessageWindow, Messages, $"Nobody wins score {player1.Score} = {player2.Score}");
+                WriteMessages(rectMessageWindow, Messages, $"Nobody wins. Score {player1.Score} = {player2.Score}");
             }
 
             WriteMessages(rectMessageWindow, Messages, "Press {Esc} to exit...");
