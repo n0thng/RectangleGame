@@ -374,7 +374,6 @@ namespace RectangleGame
 
                 int numberMoves, height, width, numberPlayers;
 
-
                 // #if DEBUG
                 //             numberMoves = 20;
                 //             height = WindowSizeY - rectMessageWindow.Height - 3;
